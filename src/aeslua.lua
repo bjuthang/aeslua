@@ -1,3 +1,5 @@
+local _M = { _VERSION = "0.0.1" }
+
 local private = {};
 local public = {};
 aeslua = public;
@@ -18,6 +20,8 @@ public.CBCMODE = 2;
 public.OFBMODE = 3;
 public.CFBMODE = 4;
 
+_M.public = public
+
 function private.pwToKey(password, keyLength)
     local padLength = keyLength;
     if (keyLength == public.AES192) then
@@ -27,7 +31,8 @@ function private.pwToKey(password, keyLength)
     if (padLength > #password) then
         local postfix = "";
         for i = 1,padLength - #password do
-            postfix = postfix .. string.char(0);
+            --postfix = postfix .. string.char(0);
+            postfix = postfix .. "0";
         end
         password = password .. postfix;
     else
@@ -51,7 +56,7 @@ end
 --
 -- mode and keyLength must be the same for encryption and decryption.
 --
-function public.encrypt(password, data, keyLength, mode)
+function _M.encrypt(password, data, keyLength, mode)
 	assert(password ~= nil, "Empty password.");
 	assert(password ~= nil, "Empty data.");
 	 
@@ -60,7 +65,8 @@ function public.encrypt(password, data, keyLength, mode)
 
     local key = private.pwToKey(password, keyLength);
 
-    local paddedData = util.padByteString(data);
+    --local paddedData = util.padByteString(data);
+    local paddedData = data;
     
     if (mode == public.ECBMODE) then
         return ciphermode.encryptString(key, paddedData, ciphermode.encryptECB);
@@ -87,7 +93,7 @@ end
 --
 -- mode and keyLength must be the same for encryption and decryption.
 --
-function public.decrypt(password, data, keyLength, mode)
+function _M.decrypt(password, data, keyLength, mode)
     local mode = mode or public.CBCMODE;
     local keyLength = keyLength or public.AES128;
 
@@ -104,6 +110,8 @@ function public.decrypt(password, data, keyLength, mode)
         plain = ciphermode.decryptString(key, data, ciphermode.decryptCFB);
     end
     
+    return plain 
+    --[[
     result = util.unpadByteString(plain);
     
     if (result == nil) then
@@ -111,4 +119,6 @@ function public.decrypt(password, data, keyLength, mode)
     end
     
     return result;
+    --]]
 end
+return _M
